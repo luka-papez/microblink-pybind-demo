@@ -1,0 +1,31 @@
+cmake_minimum_required( VERSION 3.10 )
+
+project( my_cpp_module )
+
+find_package( Python3 COMPONENTS Interpreter Development )
+if( NOT Python3_FOUND )
+    message( FATAL_ERROR "Python3 is required for python bindings generation" )
+endif()
+
+include( CMakePrintHelpers )
+cmake_print_variables( Python3_INCLUDE_DIRS )
+
+add_library( ${PROJECT_NAME} SHARED
+    ${CMAKE_CURRENT_LIST_DIR}/src/my_cpp_module.cpp
+)
+
+target_include_directories( ${PROJECT_NAME} PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}/pybind11/include
+    ${Python3_INCLUDE_DIRS}
+)
+
+target_compile_options( ${PROJECT_NAME} PRIVATE -std=c++17 -Wall -Wextra -Werror )
+
+add_subdirectory( pybind11 )
+
+set_target_properties( ${PROJECT_NAME} PROPERTIES PREFIX "" )
+set_target_properties( ${PROJECT_NAME} PROPERTIES SUFFIX ".so" )
+
+if( APPLE )
+    set_target_properties( ${PROJECT_NAME} PROPERTIES LINK_FLAGS "-undefined dynamic_lookup ")
+endif()
